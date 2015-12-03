@@ -20,12 +20,15 @@ class ClassNode extends Node {
     private List<String> variableNames = new ArrayList<>();
     private List<String> methodNames = new ArrayList<>();
 
+    private String packageName;
+
     /**
      *
      * @param name class name
      */
-    public ClassNode(String name) {
+    public ClassNode(String name, String packageName) {
         this.name = name;
+        this.packageName = packageName;
     }
 
     /**
@@ -34,8 +37,9 @@ class ClassNode extends Node {
      * @param methodNodes list of method nodes
      * @param variableNodes list of variable nodes
      */
-    public ClassNode(String name, List<MethodNode> methodNodes, List<VariableNode> variableNodes) {
+    public ClassNode(String name, String packageName, List<MethodNode> methodNodes, List<VariableNode> variableNodes) {
         this.name = name;
+        this.packageName = packageName;
         this.methodNodes = methodNodes;
         this.variableNodes = variableNodes;
 
@@ -228,6 +232,14 @@ class ClassNode extends Node {
     @Override
     public String toString() {
         return "ClassNode{" + "variableNames=" + variableNames + ", methodNames=" + methodNames + '}';
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
     }
 
 }
