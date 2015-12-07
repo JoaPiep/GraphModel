@@ -45,9 +45,11 @@ public class GraphModel {
             solveWithAStar(sFile.getClassNames(), tFile.getClassNames());
 
         }
-//        System.out.println("Name similarity " + nameSimilarity(sFile.getName(), tFile.getName()));
-//        System.out.println("Structure similarity " + structureSimilarity(tFile.getClassNodes().get(0), sFile.getClassNodes().get(0), "meth"));
-        System.out.println("Similarity " + computeSimilarityMetric(tFile.getClassNodes().get(0), sFile.getClassNodes().get(0)));
+//        System.out.println("Name similarity: " + nameSimilarity(tFile.getClassNodes().get(0).getName(), sFile.getClassNodes().get(0).getName()));
+//        System.out.println("####################################################");
+//        System.out.println("Structure similarity: " + structureSimilarity(tFile.getClassNodes().get(0), sFile.getClassNodes().get(0), "meth"));
+//        System.out.println("####################################################");
+        System.out.println("Similarity: " + computeSimilarityMetric(sFile.getClassNodes().get(0), sFile.getClassNodes().get(0)));
     }
 
     /**
@@ -59,8 +61,8 @@ public class GraphModel {
         FileNode fileNode = new FileNode("file");
         FileNode fileNode1 = new FileNode("file1");
 
-        ClassNode cclass1 = new ClassNode("Class1");
-        ClassNode cclass2 = new ClassNode("Class2");
+        ClassNode cclass1 = new ClassNode("Class1", "package");
+        ClassNode cclass2 = new ClassNode("Class2", "package");
 
         MethodNode meth1 = new MethodNode("meth1");
         MethodNode meth2 = new MethodNode("meth1");
@@ -73,6 +75,7 @@ public class GraphModel {
         meth2.addVariable(v2);
 
         cclass1.addMethod(meth1);
+        cclass1.addVariable(v2);
 
         cclass2.addMethod(meth2);
         cclass2.addMethod(meth3);
@@ -139,7 +142,6 @@ public class GraphModel {
             String s = "" + string.charAt(i) + string.charAt(i + 1);
             pairs.add(s);
         }
-        System.out.println("HashSet " + pairs.toString());
 
         return pairs;
     }
@@ -154,6 +156,9 @@ public class GraphModel {
 
         HashSet<String> pairs1 = pairs(s1);
         HashSet<String> pairs2 = pairs(s2);
+
+        System.out.println("HashSet1 " + pairs1.toString());
+        System.out.println("HashSet2 " + pairs2.toString());
 
         int union = pairs1.size() + pairs2.size();
         pairs1.retainAll(pairs2);
@@ -226,11 +231,11 @@ public class GraphModel {
 
         HashSet<Node> set = new HashSet();
         if (entity instanceof FileNode) {
+            FileNode fileNode = (FileNode) entity;
             if (relationType.equals("class")) {
-                FileNode fileNode = (FileNode) entity;
                 set = new HashSet(fileNode.getClassNodes());
-
             }
+
         } else if (entity instanceof ClassNode) {
             ClassNode classNode = (ClassNode) entity;
             switch (relationType) {
@@ -240,11 +245,27 @@ public class GraphModel {
                 case "meth":
                     set = new HashSet(classNode.getMethodNodes());
                     break;
+                case "parent":
+                    set = new HashSet();
+                    set.add(classNode.getParentNode());
+                    break;
             }
         } else if (entity instanceof MethodNode) {
-            if (relationType.equals("var")) {
-                MethodNode methodNode = (MethodNode) entity;
-                set = new HashSet(methodNode.getVariableNodes());
+            MethodNode methodNode = (MethodNode) entity;
+            switch (relationType) {
+                case "var":
+                    set = new HashSet(methodNode.getVariableNodes());
+                    break;
+                case "parent":
+                    set = new HashSet();
+                    set.add(methodNode.getParentNode());
+                    break;
+            }
+        } else if (entity instanceof VariableNode) {
+            VariableNode variableNode = (VariableNode) entity;
+            if (relationType.equals("parent")) {
+                set = new HashSet();
+                set.add(variableNode.getParentNode());
             }
         }
 
@@ -260,7 +281,6 @@ public class GraphModel {
      * given entities
      */
     private static int getCount(Node e1, Node er1, String relationType) {
-
         return 1;
     }
 
@@ -276,19 +296,22 @@ public class GraphModel {
         if (e1.getClass().equals(e2.getClass())) {
 
             List<String> relationTypes = new ArrayList();
-            relationTypes.add("class");
-            relationTypes.add("meth");
-            relationTypes.add("var");
-
-            int N = 1;
-            if (e1 instanceof ClassNode) {
-                N = 2;
-            } else if (e1 instanceof VariableNode) {
-                N = 0;
+            if (e1 instanceof FileNode) {
+                relationTypes.add("class");
+            } else if (e1 instanceof ClassNode) {
+                relationTypes.add("parent");
+                relationTypes.add("meth");
+                relationTypes.add("var");
+            } else if (e1 instanceof MethodNode) {
+                relationTypes.add("parent");
+                relationTypes.add("var");
+            }else if (e1 instanceof VariableNode) {
+                relationTypes.add("parent");
             }
 
+            int N = relationTypes.size();
             double nameSimilarity = nameSimilarity(e1.getName(), e2.getName());
-
+            System.out.println("Name Similarity " + nameSimilarity);
             pow = 0;
             double metric = 0.0;
 
